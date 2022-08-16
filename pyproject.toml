@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "model"
+version = "0.1.0"
+description = ""
+authors = ["Douglas-cc <douglasdasilvasousa8@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+numpy = "^1.23.1"
+pandas = "^1.4.3"
+xgboost = "^1.6.1"
+lightgbm = "^3.3.2"
+scikit-learn = "^1.1.2"
+librosa = "^0.9.2"
+pygame = "^2.1.2"
+matplotlib = "^3.5.3"
+seaborn = "^0.11.2"
+imblearn = "^0.0"
+scikit-optimize = "^0.9.0"
+yellowbrick = "^1.4"
+
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+ipykernel = "^6.15.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
