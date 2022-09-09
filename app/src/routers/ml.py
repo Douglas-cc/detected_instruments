@@ -5,31 +5,38 @@ from fastapi import (
   File,
   UploadFile
 )
+
 from io import BytesIO
 from librosa import load
 from librosa.feature import mfcc
 from loguru import logger
-# from schemas.schema import LoadAudio
+
 
 router = APIRouter()
 
+
 # @router.post("/files/")
-# def mfcc_enpoint(audio: LoadAudio):  
-#   feature = mfcc(y=audio.y, sr=audio.sr)
+# async def create_file(file: bytes = File()):
+#   return {"file_size": len(file)}
 
-#   for data in range(feature.shape[0]):
-#     value = np.mean(data)  
 
-#   return value
-
+# @router.post("/uploadfile/")
+# async def create_upload_file(file: UploadFile):
+#   return {"filename": file.filename}
+  
+  
 
 @router.post("/files/")
-def mfcc_enpoint(audio: bytes = File(...)):  
-  y, sr = load(BytesIO(audio))
+async def create_file(file: bytes = File()):
+  audio = BytesIO(file) 
+    
+  y, sr = load(audio)
   feature = mfcc(y=y, sr=sr)
-  logger.info(feature)
-
+  
   # for data in range(feature.shape[0]):
   #   value = np.mean(data)  
+  
+  logger.info(feature)
+  
+  return feature.tolist()
 
-  return feature[0]

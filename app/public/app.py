@@ -1,31 +1,16 @@
 import requests
 import numpy as np 
 import gradio as gr
-from librosa import load 
 from loguru import logger 
 
 
 def extract_mfcc(audio):  
     url =  "http://127.0.0.1:8000/files/"
-    
-    file = {'file_upload': open(audio, 'rb')}
-    
-    logger.info(f'filename {audio} - file enpoint {file}')
-    
-    return requests.post(url, files=file)    
+    file = {'file': open(audio ,'rb')}
+    logger.info(file)
+    res = requests.post(url, files=file) 
+    return res.text
 
-
-# def load_audio(audio):
-#     y, sr = load(audio)
-#     url =  "http://127.0.0.1:8000/files/"
-    
-#     audio = {
-#         "y":y,
-#         "sr":sr.tolist()
-#     }
-    
-#     return requests.post(url, json=audio)        
-        
     
 demo = gr.Interface(
     fn=extract_mfcc,
