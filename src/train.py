@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from itertools import combinations
+from collections import defaultdict
 from imblearn.over_sampling import SMOTE
 from sklearn.utils import  class_weight
 from sklearn.model_selection import StratifiedKFold
@@ -43,21 +44,23 @@ def cross_validate_balancead(k, model, X, y, oversampling=False, weight=False):
     return np.mean(accuracy_split)
         
     
-def train_feature_combination(model, df, features, size_comb):
-    dic_result= defaultdict(list)
+def train_feature_combination(model, df, list_features, size_comb):
     count = 0
+    dic_result= defaultdict(list)
+    comb_features = np.array(list(combinations(list_features, size_comb)))
     
-    for features in comb_features:
+    for i in comb_features:
         count = count + 1
-
-        print(f'Teste {count} -> features Selecionada para o treino: {features}')
-        X = df.iloc[:,features]
+        X = df.iloc[:,i]
+        print(f'Teste {count} -> features Selecionada para o treino: {X.columns}')
+        
 
         accuracy = cross_validate_balancead(k=5,  model=model, X=X, y=df['labels'].to_frame())
         print(f'Accuracy {accuracy} do teste -> {count}')
 
-        if accuracy >= 0.6:
-            dic_result['features'].append(features)
+        if accuracy >= 0.7:
+            dic_result['features'].append(X.columns)
             dic_result['accuracy'].append(accuracy)
+            # break
 
     return dic_result            
