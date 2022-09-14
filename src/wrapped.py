@@ -2,7 +2,6 @@ import os
 import pickle 
 import numpy as np
 import pandas as pd
-from librosa import load
 
 
 class Wrapped:
@@ -29,7 +28,3 @@ class Wrapped:
         aux = pickle.load(f)
         f.close()
         return aux  
-    
-
-
-

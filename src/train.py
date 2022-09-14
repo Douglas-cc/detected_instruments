@@ -7,6 +7,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score
 
 
+
 def cross_validate_balancead(k, model, X, y, oversampling=False, weight=False):
     kfold =  StratifiedKFold(n_splits=k) 
     accuracy_split = []
@@ -38,16 +39,25 @@ def cross_validate_balancead(k, model, X, y, oversampling=False, weight=False):
         predictions_val = model.predict(X_split_validate)
         accuracy = accuracy_score(y_split_validate, predictions_val)
         accuracy_split.append(accuracy)
-        print(f'Acuracia do modelo {str(model)} do Fold {idx}: {accuracy}')
-    
+        print(f'Acuracia do modelo {model} do Fold {idx}: {accuracy}')
     return np.mean(accuracy_split)
+        
+    
+def train_feature_combination(model, df, features, size_comb):
+    dic_result= defaultdict(list)
+    count = 0
+    
+    for features in comb_features:
+        count = count + 1
 
+        print(f'Teste {count} -> features Selecionada para o treino: {features}')
+        X = df.iloc[:,features]
 
-def permutation(values, n_per):
-    perm = permutations(values, n_per)
-    return np.array([i for i in list(perm)])
+        accuracy = cross_validate_balancead(k=5,  model=model, X=X, y=df['labels'].to_frame())
+        print(f'Accuracy {accuracy} do teste -> {count}')
 
+        if accuracy >= 0.6:
+            dic_result['features'].append(features)
+            dic_result['accuracy'].append(accuracy)
 
-def combination(values, n_per):
-    perm = combinations(values, n_per)
-    return np.array([i for i in list(perm)])
+    return dic_result            
