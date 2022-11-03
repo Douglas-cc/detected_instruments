@@ -5,8 +5,16 @@ from collections import defaultdict
 from imblearn.over_sampling import SMOTE
 from sklearn.utils import  class_weight
 from sklearn.model_selection import StratifiedKFold
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from xgboost import XGBClassifier
+from lightgbm import LGBMClassifier
+from catboost import CatBoostClassifier
+from sklearn.svm import SVC
+from sklearn.neural_network import MLPClassifier
+from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
 from sklearn.metrics import accuracy_score
-
 
 
 def cross_validate_balancead(k, model, X, y, oversampling=False, weight=False):
@@ -43,7 +51,7 @@ def cross_validate_balancead(k, model, X, y, oversampling=False, weight=False):
         print(f'Acuracia do modelo {model} do Fold {idx}: {accuracy}')
     return np.mean(accuracy_split)
         
-    
+
 def train_feature_combination(model, df, list_features, size_comb):
     count = 0
     dic_result= defaultdict(list)
@@ -64,3 +72,36 @@ def train_feature_combination(model, df, list_features, size_comb):
             # break
 
     return dic_result            
+
+
+def train_models(X, y):
+    # X = df_train.drop(columns=['labels'])
+    # y = df_train['labels'].to_frame()
+
+    models = np.array([
+        GaussianNB(),
+        KNeighborsClassifier(), 
+        DecisionTreeClassifier(), 
+        RandomForestClassifier(), 
+        HistGradientBoostingClassifier(),
+        LGBMClassifier(),
+        MLPClassifier(),
+        XGBClassifier(),
+        SVC(),
+    ])
+
+    acuracy_models = [cross_validate_balancead(k=5, model=model, X=X,  y=y) for model in models]
+
+    dict_results = {
+        'Naive Bayes': acuracy_models[0],
+        'KNN': acuracy_models[1],
+        'Arvore de Decisão': acuracy_models[2],
+        'Floresta Aleatoria': acuracy_models[3],
+        'HistGradientBoosting': acuracy_models[4],
+        'LIGHTGBM': acuracy_models[5],
+        'MLP': acuracy_models[6],
+        'XGB': acuracy_models[7],
+        'SVC': acuracy_models[8],
+    }
+
+    return dict_results
