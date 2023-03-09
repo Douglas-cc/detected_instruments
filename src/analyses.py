@@ -15,23 +15,19 @@ def detected_outilers_knn(dataframe, algorithm, neighbors, metric):
     '''
     dataframe = dataframe.select_dtypes(include=['int16', 'int32', 'int64', 'float16', 'float32', 'float64'])
     clf = KNN(n_neighbors=neighbors, algorithm=algorithm, metric=metric)
-    clf.fit(dataframe)
-    
     X = dataframe
     y = clf.labels_
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+    clf.fit(X_train)
     
-    y_test_pred = clf.predict(X_test)   # outlier labels (0 or 1)
+    pred = clf.predict(X_test)   # outlier labels (0 or 1)
     y_test_scores = clf.decision_function(X_test)  # outlier scores
 
     # evaluate and print the results
-    print("\nOn Training Data:")
-    #evaluate_print('KNN', y_train, y_train_scores)
     print("\nOn Test Data:")
     evaluate_print('KNN', y_test, y_test_scores)
-
-    return y_test_pred 
+    return pred 
     
 
 def tunning_hyperparameters_knn(dataframe, algorithm, neighbors, metric):

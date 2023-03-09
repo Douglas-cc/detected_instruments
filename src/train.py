@@ -103,5 +103,43 @@ def train_models(X, y):
         'XGB': acuracy_models[7],
         'SVC': acuracy_models[8],
     }
-
     return dict_results
+
+
+def train_tunning_hyperparameters(dataframe, model, parameters, filename,log=False, cv=5):    
+    parameters_knn = ac.tunning_hyperparameters_knn(dataframe=dataframe, log=log)
+    bayes_search = BayesSearchCV(
+        model,
+        parameters,
+        n_iter=32,
+        n_jobs=-1,
+        cv=cv,
+        scoring='accuracy'
+    )
+
+    output = []
+    for i in range(len(parameters_knn)):
+        print(f'interação {i} - Metric: {parameters_knn[i]["Metric"]}, Algoritmo: {parameters_knn[i]["algorithm"]}, neighbor: {parameters_knn[i]["neighbors"]}')
+    
+        new_df = ac.show_outilers(dataframe=dataframe, pred=parameters_knn[i]['outilers'])
+
+        X = new_df.drop(columns=["instrumento", "labels"])
+        y = new_df["labels"]
+
+        bayes_search.fit(X, y)
+
+        aux = {
+            "parametos_modelo_outliers": {
+                "Metric":parameters_knn[i]["Metric"],
+                "Algorithm":parameters_knn[i]["algorithm"],
+                "Neighbors":parameters_knn[i]["neighbors"]
+            },
+            "parametos_modelo":bayes_search.best_params_,
+            "acuracy":bayes_search.best_score_ * 100,
+        }
+
+        print(f'interação {i}', aux)
+        output.append(aux)
+        
+    pickle.dump(output, open(wp.directory_row+filename, 'wb'))
+    return output    
