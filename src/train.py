@@ -14,8 +14,13 @@ from catboost import CatBoostClassifier
 from sklearn.svm import SVC
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
+from skopt import BayesSearchCV
+from skopt.space import Real, Integer, Categorical
 from sklearn.metrics import accuracy_score
+from src.analysesV02 import Analytics
 
+
+ac = Analytics()
 
 def cross_validate_balancead(k, model, X, y, oversampling=False, weight=False):
     kfold =  StratifiedKFold(n_splits=k) 
@@ -77,7 +82,6 @@ def train_feature_combination(model, df, list_features, size_comb):
 def train_models(X, y):
     # X = df_train.drop(columns=['labels'])
     # y = df_train['labels'].to_frame()
-
     models = np.array([
         GaussianNB(),
         KNeighborsClassifier(), 
