@@ -3,7 +3,6 @@ import pickle
 import numpy as np
 import pandas as pd
 
-
 class Wrapped:
     def __init__(self, row, processed, files):
         self.directory_row = row

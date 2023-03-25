@@ -5,6 +5,7 @@ import seaborn as sns
 from pyod.models.knn import KNN
 from sklearn.manifold import TSNE
 
+
 class Analytics:
     def __init__(self):
         self.clf_knn = KNN()
@@ -18,7 +19,6 @@ class Analytics:
         clf = KNN(n_neighbors=neighbors, algorithm=algorithm, metric=metric)
         X = dataframe.select_dtypes(include=self.features_numerics)
         clf.fit(X)       
-
         pred = clf.labels_   # outlier labels (0 or 1)
         scores = clf.decision_scores_  # outlier scores
         return {"scores":scores, "predictions":pred}
@@ -29,14 +29,12 @@ class Analytics:
         for k in range(len(self.neighbors)):
             for a in range(len(self.algorithms)):
                 for m in range(len(self.metrics)):
-
                     result = self.detected_outilers_knn(
                         dataframe=dataframe,
                         algorithm=self.algorithms[a],
                         neighbors=self.neighbors[k], 
                         metric=self.metrics[m]
-                    )
-                    
+                    )                
                     atual = {
                         "outilers": result["predictions"],
                         "scores": result["scores"],
@@ -45,12 +43,10 @@ class Analytics:
                         "Metric": self.metrics[m]
                     }
                     output.append(atual)
-
                     if log:
                         print('PARAMETROS')
                         print(f'Resultados -> n_neighbors: {self.neighbors[k]} algoritmo: {self.algorithms[a]} - distancia: {self.metrics[m]}')
                         print()
-
         return output
 
 
@@ -79,7 +75,6 @@ class Analytics:
             }, 
             inplace = True
         )
-
         df_corr = df_corr.query(f'correlacao > {limit_inf} and correlacao < {limit_sup}')
         features_select = df_corr.features_b.unique()
         features = np.concatenate((features_select, ['labels','instrumento']))
