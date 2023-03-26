@@ -3,12 +3,12 @@
 
 
 # Parametros PYOD
-- Decission Function:
+## Decission Function:
 
 **decision_function():** Este método retorna o score de decisão para cada amostra. O score de decisão é uma medida de quão provável é que uma determinada amostra seja um outlier. O valor do score de decisão depende do algoritmo específico utilizado. Para alguns algoritmos, um valor maior indica uma maior probabilidade de ser um outlier, enquanto para outros, um valor menor indica uma maior probabilidade de ser um outlier.
 
 
-#### interpretando o score para o caso do KNN
+## Interpretando o score para o caso do KNN
 
 decision_function() do algoritmo KNN retorna a distância média das k amostras mais próximas para cada amostra no conjunto de dados. O valor retornado pelo método decision_function() pode ser interpretado como o grau de anomalia da amostra, em que valores mais altos indicam maior grau de anomalia.
 
@@ -42,7 +42,7 @@ Em resumo, o atributo decision_scores_ é usado para retornar o score de decisã
 **labels_:** Este atributo retorna uma matriz binária indicando se cada amostra é um outlier ou não, assim como o método predict(). No entanto, o atributo labels_ é definido apenas para alguns algoritmos que suportam a detecção de outliers de várias classes. Nesses casos, labels_ é uma matriz em que cada linha corresponde a uma amostra e cada coluna corresponde a uma classe. O valor da célula (i,j) indica se a amostra i pertence à classe j (0 para amostras normais e 1 para outliers)
 
 
-### Principal diferenaça entre Labels e Predict:
+## Principal diferenaça entre Labels e Predict:
 
 O método predict() e o atributo labels_ são usados para identificar os outliers em um conjunto de dados. No entanto, há uma diferença importante entre eles:
 
