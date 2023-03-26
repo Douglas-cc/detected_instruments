@@ -17,18 +17,6 @@ class TrainModels:
     def __init__(self):
         self.count = 0
         self.dic_result= defaultdict(list)
-        self.output = pd.DataFrame(columns=[
-            "metric_detected_outiler",
-            "algorithm_detected_outiler",
-            "neighbors_detected_outiler",
-            "parametos_models",
-            "accuracy_models",
-        ])
-        self.col_metric_knn = []
-        self.col_algorithm_knn = []
-        self.col_neighbors_knn = []
-        self.parametos_models = []
-        self.accuracy = []
         self.accuracy_split = []
         self.ac = Analytics()
         self.wp = Wrapped(
@@ -105,7 +93,8 @@ class TrainModels:
         return output
 
 
-    def train_tunning_hyperparameters(self, dataframe, model, parameters, filename, cv=5):    
+    def train_tunning_hyperparameters(self, dataframe, model, parameters, filename, cv=5):  
+        dict_output = defaultdict(list)  
         parameters_knn = self.ac.tunning_hyperparameters_knn(dataframe=dataframe, log=False)
         bayes_search = BayesSearchCV(
             model,
@@ -123,22 +112,17 @@ class TrainModels:
             bayes_search.fit(X, y)
 
             # salvando os resultados
-            self.col_metric_knn.append(parameters_knn[i]["Metric"])
-            self.col_algorithm_knn.append(parameters_knn[i]["algorithm"])
-            self.col_neighbors_knn.append(parameters_knn[i]["neighbors"])
-            self.parametos_models.append(bayes_search.best_params_)
-            self.accuracy.append(bayes_search.best_score_ * 100)
+            dict_output["metric_detected_outiler"].append(parameters_knn[i]["Metric"])
+            dict_output["algorithm_detected_outiler"].append(parameters_knn[i]["algorithm"])
+            dict_output["neighbors_detected_outiler"].append(parameters_knn[i]["neighbors"])
+
+            print(f'interação {i} - Acuracy models: {bayes_search.best_score_ * 100}')
+            dict_output["parametos_models"].append(bayes_search.best_params_)
+            dict_output["accuracy_models"].append(bayes_search.best_score_ * 100)
 
         # preenchendo dataframe de saida
-        print(f'Size dataframe {len(self.output)}')
-        print( 'Result parameters size: ', len( self.col_metric_knn), len(self.col_algorithm_knn), len(self.col_neighbors_knn) )
-        
-        self.output["metric_detected_outiler"] = self.col_metric_knn
-        self.output["algorithm_detected_outiler"] = self.col_algorithm_knn
-        self.output["neighbors_detected_outiler"] = self.col_neighbors_knn
-        self.output["parametos_models"] = self.parametos_models
-        self.output["accuracy_models"] = self.accuracy
+        df_output = pd.DataFrame.from_dict(dict_output)
 
         # salvando o artefado
-        pickle.dump(self.output, open(self.wp.directory_row+filename, 'wb'))
-        return self.output    
+        pickle.dump(df_output, open(self.wp.directory_row+filename, 'wb'))
+        return df_output    
