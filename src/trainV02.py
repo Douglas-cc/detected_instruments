@@ -52,11 +52,10 @@ class TrainModels:
             # validacao SEM oversampling, amostra do mundo real com dados desbalanceados
             predictions_val = model.predict(X_split_validate)
             accuracy = accuracy_score(y_split_validate, predictions_val)
-
             
             self.accuracy_split.append(accuracy)
             print(f'Acuracia do modelo {model} do Fold {idx}: {accuracy}')        
-        return np.mean(self.accuracy_split)
+        return np.mean(self.accuracy_split), np.std(self.accuracy_split)
 
 
     def train_feature_combination(self, k, model, dataframe, list_features, size_comb):
@@ -105,7 +104,7 @@ class TrainModels:
             scoring='accuracy'
         )
         for i in range(len(parameters_knn)):
-            print(f'interação {i} - Metric: {parameters_knn[i]["Metric"]}, Algoritmo: {parameters_knn[i]["algorithm"]}, neighbor: {parameters_knn[i]["neighbors"]}')
+            print(f'interação {i} -> Metric: {parameters_knn[i]["Metric"]}, Algoritmo: {parameters_knn[i]["algorithm"]}, neighbor: {parameters_knn[i]["neighbors"]}')
             new_df = self.ac.show_outilers(dataframe=dataframe, pred=parameters_knn[i]['outilers'])
             X = new_df.drop(columns=["instrumento", "labels"])
             y = new_df["labels"]
@@ -118,6 +117,7 @@ class TrainModels:
 
             print(f'interação {i} - Acuracy models: {bayes_search.best_score_ * 100}')
             dict_output["parametos_models"].append(bayes_search.best_params_)
+
             dict_output["accuracy_models"].append(bayes_search.best_score_ * 100)
 
         # preenchendo dataframe de saida
