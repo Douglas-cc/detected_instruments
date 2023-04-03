@@ -17,7 +17,6 @@ class TrainModels:
     def __init__(self):
         self.count = 0
         self.dic_result= defaultdict(list)
-        self.accuracy_split = []
         self.ac = Analytics()
         self.wp = Wrapped(
             '../data/row/',
@@ -27,6 +26,14 @@ class TrainModels:
 
     def cross_validate_balancead(self, k, model, X, y, oversampling=False, weight=False):
         kfold =  StratifiedKFold(n_splits=k) 
+
+        # tranformando y de series para dataframe de unidimensão
+        y = y.to_frame()
+
+        # arrays resultados
+        accuracy_split = np.array([]) 
+        predicts_split = np.array([])
+        
         # interando sobre os splits
         for idx, (idx_train, idx_validate) in enumerate(kfold.split(X, y)):
             X_split_train = X.iloc[idx_train, :]
@@ -52,10 +59,18 @@ class TrainModels:
             # validacao SEM oversampling, amostra do mundo real com dados desbalanceados
             predictions_val = model.predict(X_split_validate)
             accuracy = accuracy_score(y_split_validate, predictions_val)
-            
-            self.accuracy_split.append(accuracy)
+
+            accuracy_split = np.append(accuracy_split, accuracy)
+            predicts_split = np.append(predicts_split, predictions_val)
+
             print(f'Acuracia do modelo {model} do Fold {idx}: {accuracy}')        
-        return np.mean(self.accuracy_split), np.std(self.accuracy_split)
+
+        output = {
+            'accuracy': np.mean(accuracy_split) * 100,
+            'std': np.std(accuracy_split),
+            'predictions': predicts_split
+        }
+        return output
 
 
     def train_feature_combination(self, k, model, dataframe, list_features, size_comb):
@@ -64,13 +79,14 @@ class TrainModels:
             self.count  = self.count  + 1
             X = dataframe.iloc[:,i]
             print(f'Teste {self.count} -> features Selecionada para o treino: {X.columns}')
-        
-            accuracy = self.cross_validate_balancead(k=k,  model=model, X=X, y=dataframe['labels'].to_frame())
+            result = self.cross_validate_balancead(k=k,  model=model, X=X, y=dataframe['labels'].to_frame())
+            
+            accuracy = result["accuracy"]
             print(f'Accuracy {accuracy} do teste -> {self.count}')
-
             if accuracy >= 0.7:
                 self.dic_result['features'].append(X.columns)
                 self.dic_result['accuracy'].append(accuracy)
+
         return self.dic_result   
 
 
@@ -88,9 +104,7 @@ class TrainModels:
 
 
     def train_models(self, X, y, models):
-        output = {f'{str(m)[:-2]}':self.cross_validate_balancead(k=5, model=m, X=X,  y=y.to_frame()) for m in models} 
-        return output
-
+        return {f'{str(m)[:-2]}':self.cross_validate_balancead(k=5, model=m, X=X,  y=y.to_frame()) for m in models} 
 
     def train_tunning_hyperparameters(self, dataframe, model, parameters, filename, cv=5):  
         dict_output = defaultdict(list)  

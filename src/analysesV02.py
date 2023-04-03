@@ -85,15 +85,17 @@ class Analytics:
         total_outilers = dataframe_outilers.instrumento.value_counts().reset_index()
         total_outilers = total_outilers.rename(
             columns={
-                'index':'nome', 
-                'instrumento':'total_inst'
+                "index":"nome", 
+                "instrumento":"outliers"
             }
         )
+        size_dataframe = total_outilers.shape[0]
+        total_outilers.loc[size_dataframe] = ["total", sum(total_outilers["outliers"])]
         return total_outilers
   
 
     def plot_outilers_inst(self, dataframe_outilers):
         total_outilers = self.table_outilers_inst(dataframe_outilers)
-        sns.barplot(x='nome', y="total_inst", data=total_outilers)
+        sns.barplot(x='nome', y="outliers", data=total_outilers.iloc[:-1])
         plt.xticks(rotation=90)
         return plt.show()
