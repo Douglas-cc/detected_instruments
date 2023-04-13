@@ -64,6 +64,11 @@ class Analytics:
         outilers_id =[pred[i] == 1 for i in range(pred.shape[0])]
         return dataframe.iloc[outilers_id,:]        
 
+    
+    def show_inlers(self, dataframe, pred):
+        outilers_id =[pred[i] == 0 for i in range(pred.shape[0])]
+        return dataframe.iloc[outilers_id,:]        
+
 
     def features_corr(self, dataframe, limit_inf, limit_sup):
         df_corr = dataframe[dataframe.columns[:-2]].corr().unstack().reset_index().dropna()
@@ -82,7 +87,8 @@ class Analytics:
         return dataframe[features]        
 
 
-    def table_outilers_inst(self, dataframe_outilers):
+    def table_outilers_inst(self, dataframe_outilers, dataframe_inlers):
+        # outilers
         total_outilers = dataframe_outilers.instrumento.value_counts().reset_index()
         total_outilers = total_outilers.rename(
             columns={
@@ -92,6 +98,8 @@ class Analytics:
         )
         size_dataframe = total_outilers.shape[0]
         total_outilers.loc[size_dataframe] = ["total", sum(total_outilers["outliers"])]
+        # inlers 
+
         return total_outilers
   
 
@@ -102,9 +110,15 @@ class Analytics:
         return plt.show()
     
     
-    def matriz_confusion(self, y_validate, predicts, title):
-        matrix = confusion_matrix(y_validate, predicts)
+    def matriz_confusion(self, y_validate, predicts, labels, title):
+        matrix = confusion_matrix(y_true=y_validate, y_pred=predicts)
         ax = sns.heatmap(matrix, annot=True)
+
+        # conf labels e title
         ax.set(title=title)
+        ax.xaxis.tick_top()
+        ax.xaxis.set_ticklabels(labels, rotation = 20)
+        ax.yaxis.set_ticklabels(labels, rotation = 30)
+        
         return ax
         
