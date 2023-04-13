@@ -1,4 +1,6 @@
+import os
 import pickle
+import mlflow 
 import numpy as np
 import pandas as pd
 from itertools import combinations
@@ -12,6 +14,14 @@ from sklearn.metrics import accuracy_score
 from src.wrapped import Wrapped
 from src.analysesV02 import Analytics
 
+# # extanciar servidor 
+# mlflow.set_tracking_uri('http://localhost:5000')
+
+# # criar experimento
+# mlflow.set_experiment('Models Exercice')
+
+# # salvar modelo
+# os.makedirs('tmp', exist_ok=True)
 
 class TrainModels:
     def __init__(self):
@@ -24,16 +34,20 @@ class TrainModels:
             '../data/files/'
         )
 
-    def cross_validate_balancead(self, k, model, X, y, oversampling=False, weight=False):
+    def cross_validate_balancead(self, k, model, name_base,X, y, oversampling=False, weight=False):
         kfold =  StratifiedKFold(n_splits=k) 
+        name_model = str(model)
+        size_data = len(X) 
+        print('Size data inputs', size_data)
 
         # tranformando y de series para dataframe de unidimensão
         y = y.to_frame()
 
         # arrays resultados
-        accuracy_split = np.array([]) 
-        predicts_split = np.array([])
-        
+        accuracy_split = np.array([])
+        predictions_split = np.array([])
+        y_validate = np.array([])
+
         # interando sobre os splits
         for idx, (idx_train, idx_validate) in enumerate(kfold.split(X, y)):
             X_split_train = X.iloc[idx_train, :]
@@ -51,26 +65,39 @@ class TrainModels:
                 )
             # com os dados balanceados SÓ NO TREINO, vamos treinar 
             model.fit(X_split_train, y_split_train.values.flatten())
-        
+                      
+            # # salvar modelo 
+            # serialized_model = pickle.dumps(model)
+            # with open('tmp/model.pkl', 'wb') as f:
+            #     f.write(serialized_model) 
+
+            
+            # model_artifact_name = f'clf-{name_model[:-2]}-{name_base}-k{1}'
+            # model_artifact = {
+            #     model_artifact_name: 'tmp/model.pkl'
+            # }
+            
+            # mlflow.pyfunc.log_model(
+            # "custom_model",
+            # artifacts=model_artifacts,
+            # registered_model_name="Detector Instrumentos"            
+            # ) 
+
             # splist para validação
             X_split_validate = X.iloc[idx_validate, :]
-            y_split_validate = y.iloc[idx_validate, :]
+            y_split_validate = y.iloc[idx_validate, :].values
         
             # validacao SEM oversampling, amostra do mundo real com dados desbalanceados
             predictions_val = model.predict(X_split_validate)
             accuracy = accuracy_score(y_split_validate, predictions_val)
 
+            # save outputs...
             accuracy_split = np.append(accuracy_split, accuracy)
-            predicts_split = np.append(predicts_split, predictions_val)
+            predictions_split = np.append(predictions_split, predictions_val)
+            y_validate = np.append(y_validate, y_split_validate)
 
             print(f'Acuracia do modelo {model} do Fold {idx}: {accuracy}')        
-
-        output = {
-            'accuracy': np.mean(accuracy_split) * 100,
-            'std': np.std(accuracy_split),
-            'predictions': predicts_split
-        }
-        return output
+        return {'accuracy': np.mean(accuracy_split) * 100, 'std': np.std(accuracy_split), 'predictions': predictions_split, 'y_validate': np.reshape(y_validate, (size_data, ))}
 
 
     def train_feature_combination(self, k, model, dataframe, list_features, size_comb):

@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
 from pyod.models.knn import KNN
 from sklearn.manifold import TSNE
 
@@ -99,3 +100,11 @@ class Analytics:
         sns.barplot(x='nome', y="outliers", data=total_outilers.iloc[:-1])
         plt.xticks(rotation=90)
         return plt.show()
+    
+    
+    def matriz_confusion(self, y_validate, predicts, title):
+        matrix = confusion_matrix(y_validate, predicts)
+        ax = sns.heatmap(matrix, annot=True)
+        ax.set(title=title)
+        return ax
+        

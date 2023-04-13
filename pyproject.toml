@@ -21,6 +21,7 @@ pyod = "^1.0.4"
 catboost = "^1.0.6"
 gradio = "^3.4.1"
 loguru = "^0.6.0"
+shap = "^0.41.0"
 
 
 [tool.poetry.dev-dependencies]

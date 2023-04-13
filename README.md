@@ -54,11 +54,6 @@ Em resumo, a principal diferença entre predict() e labels_ é que o primeiro é
 
 # Instalando as dependecias 
 
-- Instalar o arquivo python
-```bash
-python setup.py develop
-```
-
 - Instalando versão python com pyenv 
 ```bash
 pyenv install 3.10.0
@@ -77,4 +72,13 @@ poetry env use 3.10
 - Iniciar o ambiente virtual
 ```bash 
 poetry shell
+```
+- Instalar bibliotecas python .toml
+```bash 
+poetry install
+```
+
+- Instalar o arquivo python
+```bash
+python setup.py develop
 ```
