@@ -1,3 +1,4 @@
+import shap
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -87,38 +88,67 @@ class Analytics:
         return dataframe[features]        
 
 
-    def table_outilers_inst(self, dataframe_outilers, dataframe_inlers):
-        # outilers
-        total_outilers = dataframe_outilers.instrumento.value_counts().reset_index()
-        total_outilers = total_outilers.rename(
+    def table_outilers_inst(self, dataframe, pred):
+        # fazendo filtragens...
+        outilers = self.show_outilers(dataframe, pred)
+        inlers = self.show_inlers(dataframe, pred)
+
+        # calcular o tatal de outilers por intrumento
+        outilers = outilers.instrumento.value_counts().reset_index()
+        outilers = outilers.rename(
             columns={
-                "index":"nome", 
-                "instrumento":"outliers"
+                    "index":"instrumento", 
+                    "instrumento":"outliers"
+                }
+            )
+
+        # calcular o tatal de inlers por intrumento
+        inlers = inlers.instrumento.value_counts().reset_index()
+        inlers = inlers.rename(
+            columns={
+                "index":"instrumento", 
+                "instrumento":"inlers"  
             }
         )
-        size_dataframe = total_outilers.shape[0]
-        total_outilers.loc[size_dataframe] = ["total", sum(total_outilers["outliers"])]
-        # inlers 
 
-        return total_outilers
+        output = outilers.merge(inlers, on='instrumento', how='left')
+        return output.append(
+            {
+                "instrumento": "total", 
+                "outliers": sum(output["outliers"]),
+                "inlers": sum(output["inlers"])
+            }, 
+            ignore_index=True
+        )
+    
   
-
-    def plot_outilers_inst(self, dataframe_outilers):
-        total_outilers = self.table_outilers_inst(dataframe_outilers)
-        sns.barplot(x='nome', y="outliers", data=total_outilers.iloc[:-1])
+    def plot_outilers_inst(self, dataframe, pred):
+        total_outilers = self.table_outilers_inst(dataframe, pred)
+        sns.barplot(x='instrumento', y="outliers", data=total_outilers.iloc[:-1])
         plt.xticks(rotation=90)
         return plt.show()
     
-    
-    def matriz_confusion(self, y_validate, predicts, labels, title):
-        matrix = confusion_matrix(y_true=y_validate, y_pred=predicts)
-        ax = sns.heatmap(matrix, annot=True)
 
-        # conf labels e title
+    def matriz_confusion(self, y_validate, predicts, title, labels=None, rename_labels=False):
+        matrix = confusion_matrix(y_true=y_validate, y_pred=predicts)
+        ax = sns.heatmap(matrix, annot=True, fmt='d')
         ax.set(title=title)
-        ax.xaxis.tick_top()
-        ax.xaxis.set_ticklabels(labels, rotation = 20)
-        ax.yaxis.set_ticklabels(labels, rotation = 30)
-        
+
+        if rename_labels:
+            ax.xaxis.set_ticklabels(labels, rotation = 90)
+            ax.yaxis.set_ticklabels(labels, rotation = 90)
         return ax
         
+
+    def plot_shap_tree(self, model, X_train, y_train, size=(8, 8)):
+        explainer = shap.TreeExplainer(model=model)
+        shap_values_train = explainer.shap_values(X_train, y_train)
+        expected_value = explainer.expected_value
+    
+        waterfall = shap.plots._waterfall.waterfall_legacy(
+            expected_value=expected_value[1], 
+            shap_values=shap_values_train[1][2].reshape(-1), 
+            feature_names=X_train.columns, show=True
+        )
+        summary_bar = shap.summary_plot(shap_values_train[1], X_train, plot_type="bar", plot_size=size)
+        summary_dot = shap.summary_plot(shap_values_train[1], X_train, plot_type="dot", plot_size=size)

@@ -9,44 +9,47 @@ from imblearn.over_sampling import SMOTE
 from sklearn.utils import  class_weight
 from sklearn.model_selection import StratifiedKFold
 from sklearn.feature_selection import SequentialFeatureSelector
+from sklearn.preprocessing import LabelEncoder
 from skopt import BayesSearchCV
 from sklearn.metrics import accuracy_score
 from src.wrapped import Wrapped
 from src.analysesV02 import Analytics
 
-# # extanciar servidor 
-# mlflow.set_tracking_uri('http://localhost:5000')
-
-# # criar experimento
-# mlflow.set_experiment('Models Exercice')
-
-# # salvar modelo
-# os.makedirs('tmp', exist_ok=True)
 
 class TrainModels:
     def __init__(self):
+        self.le = LabelEncoder()
         self.count = 0
         self.dic_result= defaultdict(list)
         self.ac = Analytics()
+        self.features_numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64'] 
         self.wp = Wrapped(
             '../data/row/',
             '../data/processed/',
             '../data/files/'
         )
 
-    def cross_validate_balancead(self, k, model, name_base,X, y, oversampling=False, weight=False):
-        kfold =  StratifiedKFold(n_splits=k) 
-        name_model = str(model)
-        size_data = len(X) 
+
+    def cross_validate_balancead(self, k, dataframe, y_pred, model, oversampling=False, weight=False, shap=False):                
+        # labelEncoder para o y_pred
+        dataframe['labels'] = self.le.fit_transform(dataframe[y_pred])
+        size_data = dataframe.shape[0]
         print('Size data inputs', size_data)
 
-        # tranformando y de series para dataframe de unidimensão
-        y = y.to_frame()
+        # definindo X e Y e tranformando y em series para dataframe de unidimensão
+        y = dataframe['labels'].to_frame()
+        X = dataframe.select_dtypes(include=self.features_numerics)
+        X = X.drop(columns="labels")
 
+        kfold =  StratifiedKFold(n_splits=k) 
+        name_model = str(model)
+    
         # arrays resultados
-        accuracy_split = np.array([])
-        predictions_split = np.array([])
+        accuracy = np.array([])
+        predictions = np.array([])
+        predictions_cat = np.array([])
         y_validate = np.array([])
+        y_validate_cat = np.array([])
 
         # interando sobre os splits
         for idx, (idx_train, idx_validate) in enumerate(kfold.split(X, y)):
@@ -66,54 +69,60 @@ class TrainModels:
             # com os dados balanceados SÓ NO TREINO, vamos treinar 
             model.fit(X_split_train, y_split_train.values.flatten())
                       
-            # # salvar modelo 
-            # serialized_model = pickle.dumps(model)
-            # with open('tmp/model.pkl', 'wb') as f:
-            #     f.write(serialized_model) 
-
-            
-            # model_artifact_name = f'clf-{name_model[:-2]}-{name_base}-k{1}'
-            # model_artifact = {
-            #     model_artifact_name: 'tmp/model.pkl'
-            # }
-            
-            # mlflow.pyfunc.log_model(
-            # "custom_model",
-            # artifacts=model_artifacts,
-            # registered_model_name="Detector Instrumentos"            
-            # ) 
-
             # splist para validação
             X_split_validate = X.iloc[idx_validate, :]
             y_split_validate = y.iloc[idx_validate, :].values
+
+            # gerar graficos 
+            if shap:
+                self.ac.plot_shap_tree(model=model, X_train=X_split_train, y_train=y_split_train)
         
             # validacao SEM oversampling, amostra do mundo real com dados desbalanceados
-            predictions_val = model.predict(X_split_validate)
-            accuracy = accuracy_score(y_split_validate, predictions_val)
+            predictions_split = model.predict(X_split_validate)
+            accuracy_split = accuracy_score(y_split_validate, predictions_split)
 
-            # save outputs...
-            accuracy_split = np.append(accuracy_split, accuracy)
-            predictions_split = np.append(predictions_split, predictions_val)
+            # salvar outputs...
+            accuracy = np.append(accuracy, accuracy_split)
+            predictions = np.append(predictions, predictions_split)
             y_validate = np.append(y_validate, y_split_validate)
 
-            print(f'Acuracia do modelo {model} do Fold {idx}: {accuracy}')        
-        return {'accuracy': np.mean(accuracy_split) * 100, 'std': np.std(accuracy_split), 'predictions': predictions_split, 'y_validate': np.reshape(y_validate, (size_data, ))}
+            # salvar predições e o y como categorico
+            predictions_split_cat = predictions_split.copy()
+            y_split_validate_cat = y_split_validate.copy()
+
+            predictions_cat = np.append(predictions_cat, self.le.inverse_transform(predictions_split_cat))
+            y_validate_cat = np.append(y_validate_cat, self.le.inverse_transform(y_split_validate_cat))
+            print(f'Acuracia do modelo {model} do Fold {idx}: {accuracy}')   
+
+        # add no dataframe 
+        dataframe["predictions_cat"] = predictions_cat
+        dataframe["y_validate_cat"] = y_validate_cat
+        
+        return {
+            'accuracy': np.mean(accuracy) * 100,
+            'std': np.std(accuracy), 
+            'predictions': predictions, 
+            'y_validate': np.reshape(y_validate, (size_data, )),
+            'predictions_cat': predictions_cat, 
+            'y_validate_cat': np.reshape(y_validate_cat, (size_data, ))
+        }
 
 
-    def train_feature_combination(self, k, model, dataframe, list_features, size_comb):
+    def train_feature_combination(self, k, model, y_pred, dataframe, list_features, size_comb):
         comb_features = np.array(list(combinations(list_features, size_comb)))
         for i in comb_features:
             self.count  = self.count  + 1
             X = dataframe.iloc[:,i]
+
             print(f'Teste {self.count} -> features Selecionada para o treino: {X.columns}')
-            result = self.cross_validate_balancead(k=k,  model=model, X=X, y=dataframe['labels'].to_frame())
+            result = self.cross_validate_balancead(k=k,  model=model, dataframe=dataframe, y_pred=y_pred)
             
             accuracy = result["accuracy"]
             print(f'Accuracy {accuracy} do teste -> {self.count}')
+            
             if accuracy >= 0.7:
                 self.dic_result['features'].append(X.columns)
                 self.dic_result['accuracy'].append(accuracy)
-
         return self.dic_result   
 
 
@@ -130,8 +139,9 @@ class TrainModels:
         return X[X.columns[mask_feature]]
 
 
-    def train_models(self, X, y, models):
-        return {f'{str(m)[:-2]}':self.cross_validate_balancead(k=5, model=m, X=X,  y=y.to_frame()) for m in models} 
+    def train_models(self, dataframe, y_pred, models):
+        return {f'{str(m)[:-2]}':self.cross_validate_balancead(k=5, model=m, dataframe=dataframe, y_pred=y_pred) for m in models} 
+
 
     def train_tunning_hyperparameters(self, dataframe, model, parameters, filename, cv=5):  
         dict_output = defaultdict(list)  
@@ -146,7 +156,7 @@ class TrainModels:
         )
         for i in range(len(parameters_knn)):
             print(f'interação {i} -> Metric: {parameters_knn[i]["Metric"]}, Algoritmo: {parameters_knn[i]["algorithm"]}, neighbor: {parameters_knn[i]["neighbors"]}')
-            new_df = self.ac.show_outilers(dataframe=dataframe, pred=parameters_knn[i]['outilers'])
+            new_df = self.ac.show_inlers(dataframe=dataframe, pred=parameters_knn[i]['outilers'])
             X = new_df.drop(columns=["instrumento", "labels"])
             y = new_df["labels"]
             bayes_search.fit(X, y)
@@ -158,7 +168,6 @@ class TrainModels:
 
             print(f'interação {i} - Acuracy models: {bayes_search.best_score_ * 100}')
             dict_output["parametos_models"].append(bayes_search.best_params_)
-
             dict_output["accuracy_models"].append(bayes_search.best_score_ * 100)
 
         # preenchendo dataframe de saida

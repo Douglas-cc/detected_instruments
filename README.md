@@ -1,3 +1,6 @@
+
+
+
 # Sobre 
 
 
@@ -51,6 +54,7 @@ A principal diferença entre esses dois métodos é que o predict() é usado par
 Por exemplo, se estivermos trabalhando com um problema de detecção binária de outliers (por exemplo, detecção de transações fraudulentas em um conjunto de dados financeiros), o método predict() seria o mais adequado para identificar os outliers. Por outro lado, se estivermos trabalhando com um problema de detecção multiclasse de outliers (por exemplo, detecção de anomalias em um sistema de produção com várias falhas diferentes), o atributo labels_ seria mais útil para identificar cada tipo de falha separadamente.
 
 Em resumo, a principal diferença entre predict() e labels_ é que o primeiro é usado em problemas de detecção binária de outliers e o segundo é usado em problemas de detecção multiclasse de outliers.
+# Estrutura do Projeto
 
 # Instalando as dependecias 
 
