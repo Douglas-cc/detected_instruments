@@ -20,7 +20,6 @@ class TrainModels:
     def __init__(self):
         self.le = LabelEncoder()
         self.count = 0
-        self.dic_result= defaultdict(list)
         self.ac = Analytics()
         self.features_numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64'] 
         self.wp = Wrapped(
@@ -34,7 +33,6 @@ class TrainModels:
         # labelEncoder para o y_pred
         dataframe['labels'] = self.le.fit_transform(dataframe[y_pred])
         size_data = dataframe.shape[0]
-        print('Size data inputs', size_data)
 
         # definindo X e Y e tranformando y em series para dataframe de unidimensão
         y = dataframe['labels'].to_frame()
@@ -44,7 +42,7 @@ class TrainModels:
         kfold =  StratifiedKFold(n_splits=k) 
         name_model = str(model)
     
-        # arrays resultados
+        # arrays resultados (talvez depois mudar para algo mais dict(list))
         accuracy = np.array([])
         predictions = np.array([])
         predictions_cat = np.array([])
@@ -72,10 +70,6 @@ class TrainModels:
             # splist para validação
             X_split_validate = X.iloc[idx_validate, :]
             y_split_validate = y.iloc[idx_validate, :].values
-
-            # gerar graficos 
-            if shap:
-                self.ac.plot_shap_tree(model=model, X_train=X_split_train, y_train=y_split_train)
         
             # validacao SEM oversampling, amostra do mundo real com dados desbalanceados
             predictions_split = model.predict(X_split_validate)
@@ -92,7 +86,11 @@ class TrainModels:
 
             predictions_cat = np.append(predictions_cat, self.le.inverse_transform(predictions_split_cat))
             y_validate_cat = np.append(y_validate_cat, self.le.inverse_transform(y_split_validate_cat))
-            print(f'Acuracia do modelo {model} do Fold {idx}: {accuracy}')   
+            
+            print(f'Tamanho base: {size_data} - Acuracia do modelo {model} do Fold {idx}: {accuracy_split}')   
+            # gerar graficos shap 
+            if shap:
+                self.ac.plot_shap_tree(model=model, X_train=X_split_train, y_train=y_split_train)
 
         # add no dataframe 
         dataframe["predictions_cat"] = predictions_cat
@@ -110,6 +108,7 @@ class TrainModels:
 
     def train_feature_combination(self, k, model, y_pred, dataframe, list_features, size_comb):
         comb_features = np.array(list(combinations(list_features, size_comb)))
+        dict_output = defaultdict(list)
         for i in comb_features:
             self.count  = self.count  + 1
             X = dataframe.iloc[:,i]
@@ -121,9 +120,9 @@ class TrainModels:
             print(f'Accuracy {accuracy} do teste -> {self.count}')
             
             if accuracy >= 0.7:
-                self.dic_result['features'].append(X.columns)
-                self.dic_result['accuracy'].append(accuracy)
-        return self.dic_result   
+                dict_output['features'].append(X.columns)
+                dict_output['accuracy'].append(accuracy)
+        return dict_output   
 
 
     def selector_sequential(self, k, model_estimator, n_features, X, y):
@@ -133,7 +132,6 @@ class TrainModels:
             n_features_to_select = n_features,
             estimator=model_estimator
         )
-
         sfs.fit(X, y)
         mask_feature = sfs.get_support()
         return X[X.columns[mask_feature]]
