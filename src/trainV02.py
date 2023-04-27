@@ -15,7 +15,6 @@ from sklearn.metrics import accuracy_score
 from src.wrapped import Wrapped
 from src.analysesV02 import Analytics
 
-
 class TrainModels:
     def __init__(self):
         self.le = LabelEncoder()
@@ -27,8 +26,7 @@ class TrainModels:
             '../data/processed/',
             '../data/files/'
         )
-
-
+        
     def cross_validate_balancead(self, k, dataframe, y_pred, model, oversampling=False, weight=False, shap=False):                
         # labelEncoder para o y_pred
         dataframe['labels'] = self.le.fit_transform(dataframe[y_pred])
@@ -91,19 +89,16 @@ class TrainModels:
             # gerar graficos shap 
             if shap:
                 self.ac.plot_shap_tree(model=model, X_train=X_split_train, y_train=y_split_train)
-
-        # add no dataframe 
-        dataframe["predictions_cat"] = predictions_cat
-        dataframe["y_validate_cat"] = y_validate_cat
         
-        return {
-            'accuracy': np.mean(accuracy) * 100,
+        dict_output = {
+            'accuracy_mean': np.mean(accuracy) * 100,
             'std': np.std(accuracy), 
             'predictions': predictions, 
             'y_validate': np.reshape(y_validate, (size_data, )),
             'predictions_cat': predictions_cat, 
             'y_validate_cat': np.reshape(y_validate_cat, (size_data, ))
         }
+        return dict_output
 
 
     def train_feature_combination(self, k, model, y_pred, dataframe, list_features, size_comb):
