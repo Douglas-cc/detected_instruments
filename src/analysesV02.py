@@ -136,7 +136,7 @@ class Analytics:
 
         if rename_labels:
             ax.xaxis.set_ticklabels(labels, rotation = 90)
-            ax.yaxis.set_ticklabels(labels, rotation = 90)
+            ax.yaxis.set_ticklabels(labels, rotation = 30)
         return ax
         
 
