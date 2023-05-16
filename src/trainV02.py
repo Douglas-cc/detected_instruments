@@ -40,7 +40,6 @@ class TrainModels:
         name_model = str(model)
     
         # arrays resultados (talvez depois mudar para algo mais dict(list))
-        folds = np.array([])
         accuracy = np.array([])
         predictions = np.array([])
         predictions_cat = np.array([])
@@ -74,7 +73,6 @@ class TrainModels:
             accuracy_split = accuracy_score(y_split_validate, predictions_split)
 
             # salvar outputs...
-            folds = np.append(folds, idx+1)
             accuracy = np.append(accuracy, accuracy_split)
             predictions = np.append(predictions, predictions_split)
             y_validate = np.append(y_validate, y_split_validate)
@@ -86,14 +84,12 @@ class TrainModels:
             predictions_cat = np.append(predictions_cat, self.le.inverse_transform(predictions_split_cat))
             y_validate_cat = np.append(y_validate_cat, self.le.inverse_transform(y_split_validate_cat))
             
-            print(f'Tamanho base: {size_data} - Acuracia do modelo {model} do Fold {idx}: {accuracy_split}')
-
+            print(f'Tamanho base: {size_data} - Acuracia do modelo {model} do Fold {idx}: {accuracy_split}')   
             # gerar graficos shap 
             if shap:
                 self.ac.plot_shap_tree(model=model, X_train=X_split_train, y_train=y_split_train)
+        
         dict_output = {
-            'folds':folds,
-            'accuracy_folds': accuracy,
             'accuracy_mean': np.mean(accuracy) * 100,
             'std': np.std(accuracy), 
             'predictions': predictions, 
