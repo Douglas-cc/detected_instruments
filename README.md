@@ -13,15 +13,15 @@ O projeto de classificação de instrumentos musicais tem o potencial de contrib
 
 # Metodologia
 
-### - Criação da base de dados 
+### Criação da base de dados 
 
-### - Seleção das melhores features
+### Seleção das melhores features
 
-### - Remoção de outilers
+### Remoção de outilers
 
-### - Seleção de Melhores parametros
+### Seleção de Melhores parametros
 
-### - Treinamento de Modelos
+### Treinamento de Modelos
 
 
 # Resultados Finais
