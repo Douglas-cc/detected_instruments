@@ -11,20 +11,6 @@ Combinando técnicas de machine learning e MIR, os modelos de classificação de
 
 O projeto de classificação de instrumentos musicais tem o potencial de contribuir para o desenvolvimento de tecnologias musicais avançadas, possibilitando a criação de ferramentas e sistemas mais inteligentes para músicos, produtores e entusiastas da música. Ao utilizar técnicas de machine learning e MIR, esse projeto abre novas possibilidades para a pesquisa e o avanço da compreensão e interação com a música.
 
-# Metodologia(ainda estou documentando esta parte)
-
-### Criação da base de dados 
-
-### Seleção das melhores features
-
-### Remoção de outilers
-
-### Seleção de Melhores parametros
-
-### Treinamento de Modelos
-
-
-# Resultados Finais
 
 
 # Estrutura do Projeto
